@@ -706,8 +706,15 @@ void Host::run(boost::system::error_code const&)
 	}
 
 	for (auto p: toConnect)
-		if (p->peerType == PeerType::Required && reqConn++ < m_idealPeerCount)
+	{
+		bool peerTypeIsRequired{};
+		{
+			RecursiveGuard l(x_sessions);
+			peerTypeIsRequired = p->peerType == PeerType::Required;
+		}
+		if (peerTypeIsRequired && reqConn++ < m_idealPeerCount)
 			connect(p);
+	}
 	
 	if (!m_netPrefs.pin)
 	{
